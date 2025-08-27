@@ -145,6 +145,20 @@
     fill: none;
     opacity: 0.6;
   }
+  
+  .net-highlighted {
+    stroke: var(--primary);
+    stroke-width: 3;
+    opacity: 0.8;
+    filter: drop-shadow(0 0 4px var(--primary));
+  }
+  
+  .port-pending {
+    fill: var(--primary);
+    stroke: hsl(200 98% 60%);
+    stroke-width: 2;
+    animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 @layer utilities {

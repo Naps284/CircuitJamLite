@@ -5,9 +5,11 @@ interface CompSVGProps {
   c: BaseComp;
   onPortClick: (pid: ID) => void;
   selected: boolean;
+  pendingPort: string | null;
+  onNetHover?: (net: string | null) => void;
 }
 
-export function CompSVG({ c, onPortClick, selected }: CompSVGProps) {
+export function CompSVG({ c, onPortClick, selected, pendingPort, onNetHover }: CompSVGProps) {
   const stroke = selected ? 'var(--selected-component)' : 'var(--port-connector)';
   const fill = selected ? 'hsla(200 98% 48% / 0.1)' : 'transparent';
   
@@ -70,7 +72,14 @@ export function CompSVG({ c, onPortClick, selected }: CompSVGProps) {
   const rot = `rotate(${c.rot})`;
   
   return (
-    <g transform={`translate(${c.x * 24}, ${c.y * 24}) ${rot}`}>
+    <g 
+      transform={`translate(${c.x * 24}, ${c.y * 24}) ${rot}`}
+      onMouseEnter={() => {
+        const nets = c.ports.map(p => p.node).filter(n => n !== 'GND');
+        if (nets.length > 0) onNetHover?.(nets[0]);
+      }}
+      onMouseLeave={() => onNetHover?.(null)}
+    >
       {body}
       {/* Component label */}
       {(c.kind === 'resistor' || c.kind === 'capacitor' || c.kind === 'vsource' || c.kind === 'isource') && (
@@ -103,17 +112,20 @@ export function CompSVG({ c, onPortClick, selected }: CompSVGProps) {
       {/* Port connectors */}
       {c.ports.map((p) => {
         const portPos = rotate(p.xOff * 24, p.yOff * 24, c.rot);
+        const isPending = pendingPort === p.id;
         return (
           <circle
             key={p.id}
             cx={portPos.x}
             cy={portPos.y}
             r={6}
-            className="port-connector"
+            className={`port-connector ${isPending ? 'port-pending' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               onPortClick(p.id);
             }}
+            onMouseEnter={() => onNetHover?.(p.node)}
+            onMouseLeave={() => onNetHover?.(null)}
             data-testid={`port-${p.id}`}
           />
         );

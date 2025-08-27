@@ -16,6 +16,7 @@ import {
 interface CircuitStore extends CircuitState {
   tool: Tool;
   levelIdx: number;
+  hoveredNet: string | null;
   
   // Actions
   setTool: (tool: Tool) => void;
@@ -24,6 +25,7 @@ interface CircuitStore extends CircuitState {
   setRunning: (running: boolean) => void;
   setDt: (dt: number) => void;
   setLevelIdx: (idx: number) => void;
+  setHoveredNet: (net: string | null) => void;
   
   addComponent: (tool: Tool, x: number, y: number) => void;
   connectPorts: (pidA: ID, pidB: ID) => void;
@@ -43,6 +45,7 @@ export const useCircuitStore = create<CircuitStore>((set, get) => ({
   dt: 0.02,
   tool: 'select',
   levelIdx: 0,
+  hoveredNet: null,
 
   setTool: (tool) => set({ tool }),
   setSelectedComp: (selectedComp) => set({ selectedComp }),
@@ -50,6 +53,7 @@ export const useCircuitStore = create<CircuitStore>((set, get) => ({
   setRunning: (running) => set({ running }),
   setDt: (dt) => set({ dt }),
   setLevelIdx: (levelIdx) => set({ levelIdx }),
+  setHoveredNet: (hoveredNet) => set({ hoveredNet }),
 
   addComponent: (tool, gx, gy) => {
     const x = snap(gx);

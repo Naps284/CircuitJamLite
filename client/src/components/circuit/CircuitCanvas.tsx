@@ -1,13 +1,13 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useCircuitStore } from '@/store/CircuitStore';
 import { CompSVG } from './CompSVG';
 import { GRID, rotate, portWorldPos } from '@/utils/CircuitUtils';
 import { ZoomIn, ZoomOut, Maximize } from 'lucide-react';
-import { BaseComp, NodeId } from '@/types/Circuit';
+import { BaseComp, NodeId, Port } from '@/types/Circuit';
 
-function ConnectionLines({ comps }: { comps: BaseComp[] }) {
+function ConnectionLines({ comps, hoveredNet, pendingPort }: { comps: BaseComp[]; hoveredNet: string | null; pendingPort: string | null }) {
   const byNode = new Map<NodeId, { x: number; y: number }[]>();
   
   // Collect port positions by node
@@ -47,7 +47,7 @@ function ConnectionLines({ comps }: { comps: BaseComp[] }) {
         <path
           key={`${node}:seg:${idx}`}
           d={path}
-          className="connection-line"
+          className={`connection-line ${hoveredNet === node ? 'net-highlighted' : ''}`}
           data-net={node}
         />
       );
@@ -59,13 +59,20 @@ function ConnectionLines({ comps }: { comps: BaseComp[] }) {
 
 export function CircuitCanvas() {
   const canvasRef = useRef<SVGSVGElement>(null);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
   const { 
     comps, 
     selectedComp, 
     pendingPort, 
     tool,
+    hoveredNet,
     setSelectedComp,
     setPendingPort,
+    setHoveredNet,
     addComponent,
     connectPorts
   } = useCircuitStore();
@@ -99,6 +106,51 @@ export function CircuitCanvas() {
     e.stopPropagation();
     setSelectedComp(compId);
   };
+  
+  const handleMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setMousePos({ x, y });
+  };
+  
+  const handleNetHover = (net: string | null) => {
+    setHoveredNet(net);
+  };
+  
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setZoom(prev => Math.max(0.1, Math.min(3, prev * delta)));
+  };
+  
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button === 1 || (e.button === 0 && e.ctrlKey)) { // Middle mouse or Ctrl+click
+      e.preventDefault();
+      setIsPanning(true);
+      setPanStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
+    }
+  };
+  
+  const handleMouseUp = () => {
+    setIsPanning(false);
+  };
+  
+  const handlePanMove = (e: React.MouseEvent) => {
+    if (isPanning) {
+      setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+      return;
+    }
+    handleMouseMove(e);
+  };
+  
+  const handleZoomIn = () => setZoom(prev => Math.min(3, prev * 1.2));
+  const handleZoomOut = () => setZoom(prev => Math.max(0.1, prev / 1.2));
+  const handleFitToView = () => {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+  };
 
   return (
     <Card className="p-4 relative overflow-hidden">
@@ -107,6 +159,7 @@ export function CircuitCanvas() {
           size="sm" 
           variant="secondary" 
           className="bg-secondary/80 hover:bg-secondary"
+          onClick={handleZoomIn}
           data-testid="button-zoom-in"
         >
           <ZoomIn className="w-4 h-4 mr-2" />
@@ -116,6 +169,7 @@ export function CircuitCanvas() {
           size="sm" 
           variant="secondary" 
           className="bg-secondary/80 hover:bg-secondary"
+          onClick={handleZoomOut}
           data-testid="button-zoom-out"
         >
           <ZoomOut className="w-4 h-4 mr-2" />
@@ -125,6 +179,7 @@ export function CircuitCanvas() {
           size="sm" 
           variant="secondary" 
           className="bg-secondary/80 hover:bg-secondary"
+          onClick={handleFitToView}
           data-testid="button-fit-view"
         >
           <Maximize className="w-4 h-4 mr-2" />
@@ -137,6 +192,11 @@ export function CircuitCanvas() {
           ref={canvasRef}
           className="w-full h-full" 
           onClick={handleCanvasClick}
+          onMouseMove={handlePanMove}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+          onWheel={handleWheel}
+          style={{ cursor: isPanning ? 'grabbing' : 'default' }}
           data-testid="svg-circuit-canvas"
         >
           {/* Grid pattern background */}
@@ -152,11 +212,12 @@ export function CircuitCanvas() {
           </defs>
           <rect width="100%" height="100%" fill="url(#grid)" />
           
-          {/* Connection wires */}
-          <ConnectionLines comps={comps} />
-          
-          {/* Components */}
-          <g id="components">
+          <g transform={`translate(${pan.x}, ${pan.y}) scale(${zoom})`}>
+            {/* Connection wires */}
+            <ConnectionLines comps={comps} hoveredNet={hoveredNet} pendingPort={pendingPort} />
+            
+            {/* Components */}
+            <g id="components">
             {comps.map((comp) => (
               <g 
                 key={comp.id} 
@@ -167,20 +228,33 @@ export function CircuitCanvas() {
                 <CompSVG 
                   c={comp} 
                   onPortClick={handlePortClick} 
-                  selected={selectedComp === comp.id} 
+                  selected={selectedComp === comp.id}
+                  pendingPort={pendingPort}
+                  onNetHover={handleNetHover}
                 />
               </g>
             ))}
+            </g>
+            
+            {/* Ghost wire for pending connection */}
+          {pendingPort && (() => {
+            const port = comps.flatMap(c => c.ports).find(p => p.id === pendingPort);
+            if (!port) return null;
+            const comp = comps.find(c => c.id === port.compId);
+            if (!comp) return null;
+            const portPos = portWorldPos(comp, port);
+            return (
+              <line
+                x1={portPos.x}
+                y1={portPos.y}
+                x2={mousePos.x}
+                y2={mousePos.y}
+                className="ghost-wire"
+                pointerEvents="none"
+              />
+            );
+          })()}
           </g>
-          
-          {/* Ghost wire for pending connection */}
-          {pendingPort && (
-            <line
-              x1="0" y1="0" x2="100" y2="100"
-              className="ghost-wire"
-              pointerEvents="none"
-            />
-          )}
         </svg>
       </div>
     </Card>
