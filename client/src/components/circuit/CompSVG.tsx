@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { BaseComp, Port, ID } from '@/types/Circuit';
 import { rotate } from '@/utils/CircuitUtils';
 
@@ -10,6 +11,9 @@ interface CompSVGProps {
 }
 
 export function CompSVG({ c, onPortClick, selected, pendingPort, onNetHover }: CompSVGProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  
   const stroke = selected ? 'var(--selected-component)' : 'var(--port-connector)';
   const fill = selected ? 'hsla(200 98% 48% / 0.1)' : 'transparent';
   
@@ -79,6 +83,21 @@ export function CompSVG({ c, onPortClick, selected, pendingPort, onNetHover }: C
         if (nets.length > 0) onNetHover?.(nets[0]);
       }}
       onMouseLeave={() => onNetHover?.(null)}
+      onTouchStart={(e) => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+        longPressTimer.current = setTimeout(() => {
+          setIsDragging(true);
+          // TODO: Enable drag mode for component
+        }, 500);
+      }}
+      onTouchEnd={() => {
+        if (longPressTimer.current) clearTimeout(longPressTimer.current);
+        setIsDragging(false);
+      }}
+      style={{ 
+        cursor: isDragging ? 'grabbing' : 'pointer',
+        touchAction: 'manipulation'
+      }}
     >
       {body}
       {/* Component label */}
@@ -118,15 +137,20 @@ export function CompSVG({ c, onPortClick, selected, pendingPort, onNetHover }: C
             key={p.id}
             cx={portPos.x}
             cy={portPos.y}
-            r={6}
+            r={12}
             className={`port-connector ${isPending ? 'port-pending' : ''}`}
             onClick={(e) => {
+              e.stopPropagation();
+              onPortClick(p.id);
+            }}
+            onTouchStart={(e) => {
               e.stopPropagation();
               onPortClick(p.id);
             }}
             onMouseEnter={() => onNetHover?.(p.node)}
             onMouseLeave={() => onNetHover?.(null)}
             data-testid={`port-${p.id}`}
+            style={{ cursor: 'pointer', touchAction: 'manipulation' }}
           />
         );
       })}

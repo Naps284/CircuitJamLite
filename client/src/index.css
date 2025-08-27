@@ -93,6 +93,12 @@
   
   .circuit-canvas {
     background: var(--card);
+    touch-action: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
   
   .component-hover:hover {
@@ -129,13 +135,16 @@
   .port-connector {
     fill: var(--secondary);
     stroke: var(--port-connector);
-    stroke-width: 1.5;
+    stroke-width: 2;
     cursor: pointer;
+    transition: all 0.2s ease-in-out;
   }
   
   .port-connector:hover {
     fill: var(--primary);
     stroke: hsl(200 98% 60%);
+    stroke-width: 3;
+    transform: scale(1.15);
   }
 
   .ghost-wire {
@@ -156,8 +165,16 @@
   .port-pending {
     fill: var(--primary);
     stroke: hsl(200 98% 60%);
-    stroke-width: 2;
+    stroke-width: 3;
     animation: pulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    transform: scale(1.2);
+  }
+  
+  /* Touch-friendly component interactions */
+  .component-dragging {
+    opacity: 0.8;
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+    transform: scale(1.05);
   }
 }
 

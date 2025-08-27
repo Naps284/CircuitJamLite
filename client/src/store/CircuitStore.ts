@@ -154,3 +154,28 @@ export const useCircuitStore = create<CircuitStore>((set, get) => ({
     });
   }
 }));
+
+// Performance-optimized simulation loop using requestAnimationFrame
+let animationFrameId: number;
+let lastTime = 0;
+const targetFPS = 20; // 50ms intervals for battery efficiency
+
+const gameLoop = (currentTime: number) => {
+  if (currentTime - lastTime >= 1000 / targetFPS) {
+    useCircuitStore.getState().simulateStep();
+    lastTime = currentTime;
+  }
+  animationFrameId = requestAnimationFrame(gameLoop);
+};
+
+// Start the simulation loop
+if (typeof window !== 'undefined') {
+  animationFrameId = requestAnimationFrame(gameLoop);
+}
+
+// Cleanup function for battery optimization
+export const stopSimulation = () => {
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+  }
+};

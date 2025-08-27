@@ -64,6 +64,8 @@ export function CircuitCanvas() {
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
+  const [lastTap, setLastTap] = useState(0);
+  const animationFrameRef = useRef<number | null>(null);
   const { 
     comps, 
     selectedComp, 
@@ -125,6 +127,53 @@ export function CircuitCanvas() {
     setZoom(prev => Math.max(0.1, Math.min(3, prev * delta)));
   };
   
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      // Pinch-to-zoom gesture
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch1.clientX - touch2.clientX,
+        touch1.clientY - touch2.clientY
+      );
+      setZoom(distance / 200); // Adjust scaling factor as needed
+    } else if (e.touches.length === 1) {
+      // Single touch for panning
+      const touch = e.touches[0];
+      setIsPanning(true);
+      setPanStart({ x: touch.clientX - pan.x, y: touch.clientY - pan.y });
+      
+      // Double-tap detection
+      const now = Date.now();
+      if (now - lastTap < 300) {
+        handleFitToView();
+      }
+      setLastTap(now);
+    }
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent) => {
+    e.preventDefault();
+    if (e.touches.length === 2) {
+      // Pinch-to-zoom
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const distance = Math.hypot(
+        touch1.clientX - touch2.clientX,
+        touch1.clientY - touch2.clientY
+      );
+      setZoom(prev => Math.max(0.1, Math.min(3, distance / 200)));
+    } else if (e.touches.length === 1 && isPanning) {
+      // Single touch panning
+      const touch = e.touches[0];
+      setPan({ x: touch.clientX - panStart.x, y: touch.clientY - panStart.y });
+    }
+  };
+  
+  const handleTouchEnd = () => {
+    setIsPanning(false);
+  };
+  
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button === 1 || (e.button === 0 && e.ctrlKey)) { // Middle mouse or Ctrl+click
       e.preventDefault();
@@ -137,7 +186,7 @@ export function CircuitCanvas() {
     setIsPanning(false);
   };
   
-  const handlePanMove = (e: React.MouseEvent) => {
+  const handlePanMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (isPanning) {
       setPan({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
       return;
@@ -196,7 +245,13 @@ export function CircuitCanvas() {
           onMouseDown={handleMouseDown}
           onMouseUp={handleMouseUp}
           onWheel={handleWheel}
-          style={{ cursor: isPanning ? 'grabbing' : 'default' }}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          style={{ 
+            cursor: isPanning ? 'grabbing' : 'default',
+            touchAction: 'none'
+          }}
           data-testid="svg-circuit-canvas"
         >
           {/* Grid pattern background */}
