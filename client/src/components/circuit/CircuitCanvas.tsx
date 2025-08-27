@@ -22,12 +22,12 @@ function ConnectionLines({ comps }: { comps: BaseComp[] }) {
   const elements: JSX.Element[] = [];
   
   // Manhattan routing for each net
-  for (const [node, pts] of byNode.entries()) {
+  for (const [node, pts] of Array.from(byNode.entries())) {
     if (node === 'GND' || pts.length < 2) continue;
     
     // Calculate hub position (center of ports)
-    const hx = Math.round(pts.reduce((s, p) => s + p.x, 0) / pts.length / GRID) * GRID;
-    const hy = Math.round(pts.reduce((s, p) => s + p.y, 0) / pts.length / GRID) * GRID;
+    const hx = Math.round(pts.reduce((s: number, p: { x: number; y: number }) => s + p.x, 0) / pts.length / GRID) * GRID;
+    const hy = Math.round(pts.reduce((s: number, p: { x: number; y: number }) => s + p.y, 0) / pts.length / GRID) * GRID;
     
     // Draw hub
     elements.push(
@@ -41,7 +41,7 @@ function ConnectionLines({ comps }: { comps: BaseComp[] }) {
     );
     
     // Connect each port to hub with L-shaped path
-    pts.forEach((pt, idx) => {
+    pts.forEach((pt: { x: number; y: number }, idx: number) => {
       const path = `M ${pt.x} ${pt.y} L ${hx} ${pt.y} L ${hx} ${hy}`;
       elements.push(
         <path

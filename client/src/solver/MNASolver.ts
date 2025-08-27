@@ -119,14 +119,14 @@ export function simulateStep(comps: BaseComp[], dt: number): SimulationResult {
   }
 
   const volt = new Map<NodeId, number>();
-  for (const [n, i] of nodeIndex.entries()) {
+  Array.from(nodeIndex.entries()).forEach(([n, i]) => {
     volt.set(n, singular ? 0 : x[i]);
-  }
+  });
 
   const currents = new Map<ID, number>();
-  for (const [id, idx] of vsIndex.entries()) {
+  Array.from(vsIndex.entries()).forEach(([id, idx]) => {
     currents.set(id, singular ? 0 : x[idx]);
-  }
+  });
 
   // Update component states
   if (!singular) {
