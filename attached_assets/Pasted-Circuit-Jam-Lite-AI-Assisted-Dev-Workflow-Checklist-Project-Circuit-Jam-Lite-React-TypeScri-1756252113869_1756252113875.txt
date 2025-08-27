@@ -1,0 +1,221 @@
+Circuit Jam Lite — AI‑Assisted Dev Workflow Checklist
+
+> Project: Circuit Jam Lite (React + TypeScript, MNA solver) Owner: Naps (Nathan Milesi) Status: MVP running in canvas; starting structured build-out
+
+
+
+
+---
+
+0) Quick Links
+
+Repo: (create) → github.com/naps/circuit-jam-lite (placeholder)
+
+Replit Project: (create)
+
+Claude Project: (create) (point to same GitHub repo)
+
+Task Board: GitHub Projects (Kanban) (create)
+
+
+
+---
+
+1) Refine the product idea ✅
+
+[x] Scope: web MVP with sandbox + 3 levels (divider, RC, caps-in-series)
+
+[x] Users: learners who want interactive circuits without heavy math
+
+[x] Core loop: drop components → connect → simulate → meet goals
+
+[x] Constraints: no external deps; small dense solver; responsive UI
+
+[x] Success criteria (MVP):
+
+[ ] 10+ levels covering current/voltage/resistor/capacitor & Ohm/KCL/KVL
+
+[ ] Stable DC + first-order transients; guardrails for floating nets
+
+[ ] Pan/zoom, clean orthogonal wiring, clear meters
+
+[ ] PWA install + save/load circuits & progress
+
+
+Risks/mitigations:
+
+Solver singularities → auto-ground hints; topology checks; unit tests
+
+Performance → keep ≤100 unknowns; profile; memoized stamping
+
+
+
+
+---
+
+2) Technical implementation outline + UX journey ✅ (first pass)
+
+[x] Stack: React + TS single-file MVP → modularize (store/solver/ui/levels)
+
+[x] Solver: MNA + backward Euler for C; later: piecewise-linear diodes/LED
+
+[x] Manhattan routing (done): per-node hub, orthogonal polylines
+
+UX Journey:
+
+1. Pick level → see goals & short lesson
+
+
+2. Drop/rotate components; connect ports (ghost preview)
+
+
+3. Read probes/ammeter badges; goals turn green → next level
+
+
+4. Sandbox unlocks components as you progress; save/share circuit
+
+
+
+
+
+---
+
+3) Spin up the build (Replit Agent)
+
+[ ] Paste this checklist + code → scaffold multi-file repo
+
+[ ] Split code: solver/, components/, ui/, levels/, core/types.ts
+
+[ ] Add unit tests (Vitest): resistive net, divider, RC step, caps series
+
+[ ] Add ESLint/Prettier config; strict TS
+
+
+
+---
+
+4) Create GitHub project
+
+[ ] Initialize repo + push from Replit
+
+[ ] Create Projects board: Backlog / Doing / Review / Done
+
+[ ] Enable branch protection; require PR review; squash merges
+
+
+
+---
+
+5) Launch parallel Claude project
+
+[ ] Connect Claude Sonnet to repo; grant read/write PR comments
+
+[ ] Seed “Architecture.md” & “Solver.md”; ask for risk review
+
+
+
+---
+
+6) Use Claude as CTO
+
+[ ] Ask for modularization plan and solver test matrix
+
+[ ] Request UI audit (accessibility, keyboard ops, reduced motion)
+
+[ ] PR review checklist (naming, invariants, perf, docs)
+
+
+
+---
+
+7) Loop Claude → Replit
+
+[ ] Actionable diffs from Claude → Replit apply → commit → PR
+
+[ ] Keep branches small (<200 LOC); link tasks to issues
+
+
+
+---
+
+8) Tight feedback loop
+
+[ ] Push each session; attach screenshots to PRs/issues
+
+[ ] Track perf (nodes, solve time) in console metrics
+
+
+
+---
+
+9) Iterate 6–8 until Definition of Done
+
+DoD for v0.1.0:
+
+[ ] 12 levels with hints & pass criteria
+
+[ ] Pan/zoom + Fit-to-view
+
+[ ] Net highlight on hover/selection; ghost preview when wiring
+
+[ ] Probes & ammeters with tiny sparklines for RC
+
+[ ] PWA install; save/load local circuits + progress
+
+[ ] CI: build, typecheck, unit tests; preview deploy (Vercel/Netlify)
+
+
+
+---
+
+Sprint 1 — UI/UX polish (1–2 days)
+
+[ ] Net highlight + ghost wire preview
+
+[ ] Port affordances (hover color/size; snapping hint)
+
+[ ] Pan/zoom + Fit-to-view
+
+[ ] Inspector: inline numeric steppers; keyboard nudge (←→↑↓)
+
+
+Sprint 2 — Components & tests
+
+[ ] Switch (ideal), Ammeter, Ohmmeter, LED (piecewise-linear)
+
+[ ] Vitest: divider exactness; RC time constant; series caps ratio
+
+
+Sprint 3 — Content & persistence
+
+[ ] Level JSON format + authoring
+
+[ ] Save/Load circuits (localStorage); progress tracking
+
+[ ] Lesson cards mirrored from screenshots
+
+
+
+---
+
+Tracking
+
+Milestones: v0.1.0 (playable PWA) → v0.2 (more components) → v0.3 (sharing)
+
+Metrics: session time, level completion rate, failures before success
+
+
+
+---
+
+Notes
+
+Keep solver stable before adding non-linear parts; gate changes behind tests.
+
+Avoid over-optimizing early; prioritize clarity & teaching value.
+
+
+
+
+Successfully created text document 'Circuit Jam Lite — Ai-assisted Dev Workflow Checklist' which will be referenced in all future messages with the unique identifier textdoc_id: '68ae467348f48191b4cc237adefcf848'
+
